@@ -201,7 +201,7 @@ Ce mécanisme permet de :
 ---
 
 ## Structure du répertoire data
-
+```bash
 data
 │
 ├── dataset_source
@@ -219,7 +219,7 @@ data
 │
 └── metadata
 └── stream_offset.txt
-
+```
 Le dataset Amazon n'est **pas versionné dans le repository** en raison de sa taille.
 
 ---
@@ -322,7 +322,7 @@ Cela permet de visualiser immédiatement l’activité dans :
 
 # Structure du projet
 
-
+```bash
 Trustpilot_mlops
 │
 ├── airflow
@@ -377,7 +377,7 @@ Trustpilot_mlops
 ├── stop.sh
 └── README.md
 
-
+```
 ---
 
 # Architecture des services
