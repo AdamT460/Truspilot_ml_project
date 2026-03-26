@@ -1,0 +1,171 @@
+version: "3.9"
+
+services:
+
+  api:
+    build:
+      context: ./services/api
+      target: prod
+    container_name: trustpilot_api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mlflow
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    volumes:
+      - ./models:/models
+      - ./data:/data
+      - ./mlruns:/mlruns
+
+  api-tests:
+    build:
+        context: ./services/api
+        target: test
+    container_name: trustpilot_api_tests
+    depends_on:
+      - mlflow
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    volumes:
+      - ./models:/models
+      - ./data:/data
+      - ./mlruns:/mlruns
+
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.15.1
+    container_name: trustpilot_mlflow
+    ports:
+      - "5000:5000"
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:////mlruns/mlflow.db
+      --default-artifact-root /mlruns
+    volumes:
+      - ./mlruns:/mlruns
+      - ./mlflow.db:/mlflow.db
+
+  trainer:
+    build:
+      context: ./services/trainer
+    container_name: trustpilot_trainer
+    command: tail -f /dev/null
+    depends_on:
+      - mlflow
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - MLFLOW_EXPERIMENT_NAME=trustpilot-topic-modeling
+      - DATA_PATH=/data/raw/train.csv
+      - MODELS_DIR=/models
+      - EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+      - K=6
+      - RANDOM_STATE=42
+      - SAMPLE_SIZE=20000
+    volumes:
+      - ./models:/models
+      - ./data:/data
+      - ./mlruns:/mlruns
+
+
+  airflow-init:
+    image: apache/airflow:2.8.3
+    container_name: airflow_init
+    environment:
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
+    volumes:
+      - ./airflow:/opt/airflow
+    entrypoint: >
+      bash -c "
+      airflow db migrate &&
+      airflow users create
+      --username admin
+      --password admin
+      --firstname admin
+      --lastname admin
+      --role Admin
+      --email admin@example.com
+      "
+
+  airflow-webserver:
+    image: apache/airflow:2.8.3
+    user: "0:0"
+    container_name: airflow_webserver
+    restart: always
+    depends_on:
+      - airflow-init
+    ports:
+      - "8081:8080"
+    environment:
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
+      AIRFLOW__WEBSERVER__SECRET_KEY: "8fd73ba1f818a0c67504ffd7f432e87a"
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./services:/opt/airflow/services
+      - ./data:/opt/airflow/data
+      - ./airflow/airflow.db:/opt/airflow/airflow.db
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: webserver
+
+
+  airflow-scheduler:
+    image: apache/airflow:2.8.3
+    user: "0:0"
+    container_name: airflow_scheduler
+    restart: always
+    depends_on:
+      - airflow-webserver
+    environment:
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__WEBSERVER__SECRET_KEY: "8fd73ba1f818a0c67504ffd7f432e87a"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./services:/opt/airflow/services
+      - ./data:/opt/airflow/data
+      - ./airflow/airflow.db:/opt/airflow/airflow.db
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: scheduler
+
+
+  streamlit:
+    build:
+      context: ./services/streamlit
+    container_name: trustpilot_streamlit
+    ports:
+      - "8501:8501" 
+    depends_on:
+      - api
+
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: trustpilot_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - api
+
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: trustpilot_grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_storage:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+volumes:
+  grafana_storage:
