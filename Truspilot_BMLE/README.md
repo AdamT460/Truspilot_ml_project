@@ -1,3 +1,7 @@
+Projet complet d’analyse d’avis clients, incluant l’analyse de sentiments et l’extraction de thématiques à l’aide de techniques de machine learning (classification, clustering et NLP).  
+L’ensemble du pipeline, de la data à la mise en API, est détaillé dans le rapport disponible dans ce dépôt. La mise en production (MLOps) est expliquée dans ce fichier.
+
+
 # Trustpilot MLOps – Topic Modeling Pipeline
 
 Ce projet implémente une pipeline **MLOps complète** pour l’analyse d’avis Trustpilot et l’extraction automatique de topics.
@@ -196,7 +200,7 @@ Ce mécanisme permet de :
 ---
 
 ## Structure du répertoire data
-
+```bash
 data
 │
 ├── dataset_source
@@ -214,7 +218,7 @@ data
 │
 └── metadata
 └── stream_offset.txt
-
+```
 Le dataset Amazon n'est **pas versionné dans le repository** en raison de sa taille.
 
 ---
@@ -317,7 +321,7 @@ Cela permet de visualiser immédiatement l’activité dans :
 
 # Structure du projet
 
-
+```bash
 Trustpilot_mlops
 │
 ├── airflow
@@ -372,7 +376,7 @@ Trustpilot_mlops
 ├── stop.sh
 └── README.md
 
-
+```
 ---
 
 # Architecture des services
@@ -725,3 +729,7 @@ Ce projet illustre une architecture **MLOps complète et réaliste** intégrant 
 * CI/CD pour le déploiement
 * monitoring de la qualité des données
 * versioning des datasets
+
+---
+
+Ce projet a été développé dans le cadre d’un projet collaboratif lors de ma formation en ingénierie de l’intelligence artificielle.
