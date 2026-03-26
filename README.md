@@ -730,3 +730,7 @@ Ce projet illustre une architecture **MLOps complète et réaliste** intégrant 
 * CI/CD pour le déploiement
 * monitoring de la qualité des données
 * versioning des datasets
+
+---
+
+Ce projet a été développé dans le cadre d’un projet collaboratif lors de ma formation en ingénierie de l’intelligence artificielle.
