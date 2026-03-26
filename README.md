@@ -1,5 +1,8 @@
 # Trustpilot MLOps – API de Topic Modeling
 
+Projet complet d’analyse d’avis clients, incluant l’analyse de sentiments et l’extraction de thématiques à l’aide de techniques de machine learning (classification, clustering et NLP).  
+L’ensemble du pipeline, de la data à la mise en API, est détaillé dans le rapport disponible dans ce dépôt. La mise en production (MLOps) est expliquée dans ce fichier.
+
 Ce projet implémente un microservice de **Topic Modeling** basé sur :
 
 - Sentence-BERT pour la génération d’embeddings
